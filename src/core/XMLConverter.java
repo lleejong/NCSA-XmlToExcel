@@ -84,7 +84,7 @@ public class XMLConverter {
 			
 			newModel.crashType = root.getElementsByTagName("CrashType").item(0).getTextContent();
 			newModel.configuration = root.getElementsByTagName("Configuration").item(0).getTextContent();
-						
+			//newModel.numVehicles = root.getElementsByTagName("NumberVehicles").item(0).
 			
 			
 			
