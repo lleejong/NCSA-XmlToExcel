@@ -16,7 +16,7 @@ import model.DataModel;
 
 public class XMLConverter {
 
-	public static final String WORKDIR = "C:\\Users\\lleej\\Desktop\\sample\\2009\\";
+	public static final String WORKDIR = "C:\\Users\\lleej\\Desktop\\sample\\2010\\";
 	public static final String XML_FOLDER = "xml\\";
 	public static final String IMG_FOLDER = "jpg\\";
 
@@ -31,23 +31,26 @@ public class XMLConverter {
 		
 		File xmlWorkDir = new File(WORKDIR + XML_FOLDER);
 		File imgWorkDir = new File(WORKDIR + IMG_FOLDER);
-		readFileList(xmlWorkDir,imgWorkDir);
-		System.out.println("Total : " + xmlFileList.size());
+		String imgRelativePath = "./jpg/";
+		readFileList(xmlWorkDir,imgWorkDir,imgRelativePath);
+		System.out.println("Total : " + xmlFileList.size() + " xml files.");
 		if (xmlFileList.size() <= 0) {
 			System.err.println("XML 파일이 해당 경로에 없습니다.");
 			System.exit(1);
 		}
 		
 		parseXMLfiles();
+		ExcelFileCreator.createExcelFile(dataModels, WORKDIR+"result.xlsx");
 	}
 	
-	private void readFileList(File xmlWorkDir, File imgWorkDir){
+	private void readFileList(File xmlWorkDir, File imgWorkDir, String imgRelativePath){
 		String[] filelist = xmlWorkDir.list();
 		for (String filename : filelist) {
 			File xmlFile = new File(xmlWorkDir.getAbsolutePath()+ "\\" + filename);
 			if(xmlFile.isDirectory()){
 				File imgFile = new File(imgWorkDir.getAbsolutePath() + "\\" + filename);
-				readFileList(xmlFile, imgFile);
+				imgRelativePath += "/" + filename;
+				readFileList(xmlFile, imgFile, imgRelativePath);
 			}
 			else{
 				if (filename.endsWith(".xml")){
@@ -58,7 +61,8 @@ public class XMLConverter {
 					}
 					else{
 						xmlFileList.add(xmlWorkDir.getAbsolutePath() + "\\" + filename);
-						imgFileList.add(imgWorkDir.getAbsolutePath() + "\\" + filename.split("\\.")[0] + ".jpg");
+						imgFileList.add(imgRelativePath + "/" + filename.split("\\.")[0] + ".jpg");
+						//imgFileList.add(imgWorkDir.getAbsolutePath() + "\\" + filename.split("\\.")[0] + ".jpg");
 					}
 				}
 			}
@@ -68,7 +72,6 @@ public class XMLConverter {
 	private void parseXMLfiles() {
 		
 		for(int i = 0; i < xmlFileList.size(); i++){
-			System.out.println(i);
 			DataModel newModel = extractDataModel(xmlFileList.get(i));
 			newModel.imgPath = imgFileList.get(i);
 			dataModels.add(newModel);
