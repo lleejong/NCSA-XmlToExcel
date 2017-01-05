@@ -124,7 +124,6 @@ public class ExcelFileCreator {
 		createHeader();
 
 		for (DataModel model : models) {
-			System.out.println("row " + rowCounter);
 			processRow(model);
 		}
 
