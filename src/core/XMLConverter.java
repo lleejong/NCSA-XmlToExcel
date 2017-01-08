@@ -13,10 +13,11 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import model.DataModel;
+import ui.Main;
 
 public class XMLConverter {
 
-	public static final String WORKDIR = "C:\\Users\\lleej\\Desktop\\sample\\2010\\";
+	public static String WORKDIR;
 	public static final String XML_FOLDER = "xml\\";
 	public static final String IMG_FOLDER = "jpg\\";
 	public static final String CODE_IMG_FOLDER = "./code/";
@@ -25,27 +26,41 @@ public class XMLConverter {
 	private ArrayList<String> imgFileList;
 	private ArrayList<DataModel> dataModels;
 
-	public XMLConverter() {
+	public XMLConverter(String workdir) {
 		xmlFileList = new ArrayList<String>();
 		imgFileList = new ArrayList<String>();
 		dataModels = new ArrayList<DataModel>();
 
+		WORKDIR = workdir;
+	}
+
+	public void run(){
+		Main.logln("변환 작업 시작..");
 		File xmlWorkDir = new File(WORKDIR + XML_FOLDER);
 		File imgWorkDir = new File(WORKDIR + IMG_FOLDER);
 		String imgRelativePath = "./jpg/";
 		readFileList(xmlWorkDir, imgWorkDir, imgRelativePath);
-		System.out.println("Total : " + xmlFileList.size() + " xml files.");
+		
+		
 		if (xmlFileList.size() <= 0) {
-			System.err.println("XML 파일이 해당 경로에 없습니다.");
-			System.exit(1);
+//			System.err.println("XML 파일이 해당 경로에 없습니다.");
+//			System.exit(1);
+			Main.logln("올바른 경로를 지정해주세요.");
+			return;
 		}
-
+		//System.out.println("Total : " + xmlFileList.size() + " xml files.");
+		Main.logln("총 " + xmlFileList.size() + " 개의 XML 파일을 발견했습니다.");
 		parseXMLfiles();
+		Main.logln("Excel 파일 출력 중..");
 		ExcelFileCreator.createExcelFile(dataModels, WORKDIR + "result.xlsx");
+		Main.logln("모든 작업이 완료되었습니다.");
 	}
 
 	private void readFileList(File xmlWorkDir, File imgWorkDir, String imgRelativePath) {
 		String[] filelist = xmlWorkDir.list();
+		if(filelist == null){
+			return;
+		}
 		for (String filename : filelist) {
 			File xmlFile = new File(xmlWorkDir.getAbsolutePath() + "\\" + filename);
 			if (xmlFile.isDirectory()) {
@@ -57,7 +72,7 @@ public class XMLConverter {
 
 					File imgFile = new File(imgWorkDir.getAbsolutePath() + "\\" + filename.split("\\.")[0] + ".jpg");
 					if (!imgFile.exists()) {
-						System.out.println(imgFile.toString() + " is not existed.");
+						//System.out.println(imgFile.toString() + " is not existed.");
 					} else {
 						xmlFileList.add(xmlWorkDir.getAbsolutePath() + "\\" + filename);
 						imgFileList.add(imgRelativePath + "/" + filename.split("\\.")[0] + ".jpg");
@@ -70,12 +85,19 @@ public class XMLConverter {
 	}
 
 	private void parseXMLfiles() {
-
+		int percentCnt = 1;
+		int percent = xmlFileList.size()/10;
+		Main.log("0%..");
 		for (int i = 0; i < xmlFileList.size(); i++) {
+			if(i > percent * percentCnt){
+				Main.log(percentCnt * 10 + "%..");
+				percentCnt++;
+			}
 			DataModel newModel = extractDataModel(xmlFileList.get(i));
 			newModel.imgPath = imgFileList.get(i);
 			dataModels.add(newModel);
 		}
+		Main.logln("");
 	}
 
 	private DataModel extractDataModel(String path) {
@@ -102,7 +124,7 @@ public class XMLConverter {
 			newModel.crashTypeCode = new String[newModel.numVehicles];
 			newModel.crashTypeCodeImgPath = new String[newModel.numVehicles];
 			newModel.vehicleCrashType = new String[newModel.numVehicles];
-			newModel.total = new String[newModel.numVehicles]; 
+			newModel.total = new String[newModel.numVehicles];
 			newModel.longItudlnal = new String[newModel.numVehicles];
 			newModel.lateral = new String[newModel.numVehicles];
 			newModel.barrierEquivalent = new String[newModel.numVehicles];
@@ -114,7 +136,7 @@ public class XMLConverter {
 			newModel.light = new String[newModel.numVehicles];
 			newModel.weather = new String[newModel.numVehicles];
 
-			System.out.println(newModel.caseID);
+			//System.out.println(newModel.caseID);
 			for (int i = 0; i < newModel.numVehicles; i++) {
 				newModel.vehicleNo[i] = root.getElementsByTagName("GeneralVehicleForm").item(i).getAttributes().getNamedItem("VehicleNumber").getTextContent();
 
@@ -123,15 +145,14 @@ public class XMLConverter {
 					newModel.postedSpeedLimit[i] += " " + root.getElementsByTagName("PostedSpeedLimit").item(i).getAttributes().getNamedItem("UOM").getTextContent();
 
 				newModel.vehicleCrashType[i] = root.getElementsByTagName("CrashType").item(i + 1).getAttributes().getNamedItem("ConfigCatStr").getTextContent();
-				
-				
-				if(root.getElementsByTagName("resource").getLength() - 1 < i)
+
+				if (root.getElementsByTagName("resource").getLength() - 1 < i)
 					newModel.crashTypeCode[i] = " ";
-				else{
+				else {
 					newModel.crashTypeCode[i] = root.getElementsByTagName("resource").item(i).getTextContent();
 					newModel.crashTypeCodeImgPath[i] = CODE_IMG_FOLDER + newModel.crashTypeCode[i] + ".bmp";
 				}
-				
+
 				newModel.travelLanes[i] = root.getElementsByTagName("TravelLanes").item(i).getTextContent();
 				newModel.alignment[i] = root.getElementsByTagName("Alignment").item(i).getTextContent();
 				newModel.profile[i] = root.getElementsByTagName("Profile").item(i).getTextContent();
@@ -139,7 +160,7 @@ public class XMLConverter {
 				newModel.surfaceCondition[i] = root.getElementsByTagName("SurfaceCondition").item(i).getTextContent();
 				newModel.light[i] = root.getElementsByTagName("Light").item(i).getTextContent();
 				newModel.weather[i] = root.getElementsByTagName("Weather").item(i).getTextContent();
-				
+
 				newModel.total[i] = root.getElementsByTagName("Total").item(i).getTextContent();
 				if (!newModel.total[i].equals("Unknown") && !newModel.total[i].equals(""))
 					newModel.total[i] += " " + root.getElementsByTagName("Total").item(i).getAttributes().getNamedItem("UOM").getTextContent();
@@ -165,9 +186,5 @@ public class XMLConverter {
 		}
 
 		return newModel;
-	}
-
-	public static void main(String args[]) {
-		new XMLConverter();
 	}
 }

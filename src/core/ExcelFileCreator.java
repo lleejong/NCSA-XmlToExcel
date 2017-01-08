@@ -16,6 +16,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import model.DataModel;
+import ui.Main;
 
 public class ExcelFileCreator {
 
@@ -117,27 +118,37 @@ public class ExcelFileCreator {
 	}
 
 	public static void createExcelFile(ArrayList<DataModel> models, String path) {
-		System.out.println("Start To create Excel File");
+		//System.out.println("Start To create Excel File");
 		workbook = new XSSFWorkbook();
 		sheet = workbook.createSheet();
 
 		createHeader();
 
+		int cnt = 0;
+		int percentCount = 1;
+		int percent = models.size()/10;
+		Main.log("0%..");
 		for (DataModel model : models) {
+			if(cnt > percentCount * percent){
+				Main.log(percentCount * 10+"%..");
+				percentCount++;
+			}
 			processRow(model);
+			cnt++;
 		}
+		Main.logln("");
 
-		System.out.println("Start to auto Size..");
-		XSSFRow head = sheet.getRow(0);
-
-		for (int i = 0; i < head.getLastCellNum(); i++) {
-			long startTime = System.currentTimeMillis();
-			System.out.println("--" + i);
-			sheet.autoSizeColumn(i);
-			long endTime = System.currentTimeMillis();
-			System.out.println((endTime - startTime) / 1000.0 + " sec.");
-		}
-
+//		System.out.println("Start to auto Size..");
+//		XSSFRow head = sheet.getRow(0);
+//
+//		for (int i = 0; i < head.getLastCellNum(); i++) {
+//			long startTime = System.currentTimeMillis();
+//			System.out.println("--" + i);
+//			sheet.autoSizeColumn(i);
+//			long endTime = System.currentTimeMillis();
+//			System.out.println((endTime - startTime) / 1000.0 + " sec.");
+//		}
+//
 		try {
 			FileOutputStream outfile = new FileOutputStream(path);
 			workbook.write(outfile);
