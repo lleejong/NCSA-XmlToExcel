@@ -77,9 +77,17 @@ public class Main extends JFrame implements ActionListener {
 		if (cmd.equals("BROWSE")) {
 			if (jfc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
 				tf.setText(jfc.getSelectedFile().toString());
+				String osname = System.getProperty("os.name").toLowerCase();
 				workdir = jfc.getSelectedFile().getAbsolutePath();
-				workdir = workdir.replace("\\", "\\\\");
-				workdir += "\\\\";
+				if(osname.contains("win")){
+					
+					workdir = workdir.replace("\\", "\\\\");
+					workdir += "\\\\";
+				}
+				else{
+					workdir += "/";
+				}
+				
 				//System.out.println(workdir);
 			}
 		} else {
