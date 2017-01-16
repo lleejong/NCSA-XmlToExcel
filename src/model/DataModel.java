@@ -24,6 +24,7 @@ public class DataModel {
 	public String[] light;
 	public String[] weather;
 	public String imgPath;
+	public String wmvPath;
 	//public String movPath;
 	
 	public String toString(){

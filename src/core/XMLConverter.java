@@ -2,6 +2,7 @@ package core;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -20,16 +21,19 @@ public class XMLConverter {
 	public static String WORKDIR;
 	public static final String XML_FOLDER = "xml";
 	public static final String IMG_FOLDER = "jpg";
+	public static final String WMV_FOLDER = "wmv";
 	public static final String CODE_IMG_FOLDER = "./code/";
 
 	private ArrayList<String> xmlFileList;
 	private ArrayList<String> imgFileList;
+	private ArrayList<String> wmvFileList;
 	private ArrayList<DataModel> dataModels;
 	private boolean isWindowOS = false;
 
 	public XMLConverter(String workdir) {
 		xmlFileList = new ArrayList<String>();
 		imgFileList = new ArrayList<String>();
+		wmvFileList = new ArrayList<String>();
 		dataModels = new ArrayList<DataModel>();
 
 		String osname = System.getProperty("os.name").toLowerCase();
@@ -44,16 +48,20 @@ public class XMLConverter {
 
 		File xmlWorkDir;
 		File imgWorkDir;
+		File wmvWorkDir;
 		if (isWindowOS) {
 			xmlWorkDir = new File(WORKDIR + XML_FOLDER + "\\");
 			imgWorkDir = new File(WORKDIR + IMG_FOLDER + "\\");
+			wmvWorkDir = new File(WORKDIR + WMV_FOLDER + "\\");
 			isWindowOS = true;
 		} else {
 			xmlWorkDir = new File(WORKDIR + XML_FOLDER + "/");
 			imgWorkDir = new File(WORKDIR + IMG_FOLDER + "/");
+			wmvWorkDir = new File(WORKDIR + WMV_FOLDER + "/");
 		}
 		String imgRelativePath = "./jpg/";
-		readFileList(xmlWorkDir, imgWorkDir, imgRelativePath);
+		String wmvRelativePath = "./wmv/";
+		readFileList(xmlWorkDir, imgWorkDir, wmvWorkDir, imgRelativePath, wmvRelativePath);
 
 		if (xmlFileList.size() <= 0) {
 			// System.err.println("XML 파일이 해당 경로에 없습니다.");
@@ -69,7 +77,7 @@ public class XMLConverter {
 		Main.logln("모든 작업이 완료되었습니다.");
 	}
 
-	private void readFileList(File xmlWorkDir, File imgWorkDir, String imgRelativePath) {
+	private void readFileList(File xmlWorkDir, File imgWorkDir, File wmvWorkDir, String imgRelativePath, String wmvRelativePath) {
 		String[] filelist = xmlWorkDir.list();
 		if (filelist == null) {
 			return;
@@ -87,30 +95,54 @@ public class XMLConverter {
 					imgFile = new File(imgWorkDir.getAbsolutePath() + "\\" + filename);
 				else
 					imgFile = new File(imgWorkDir.getAbsolutePath() + "/" + filename);
-
 				imgRelativePath += "/" + filename;
-				readFileList(xmlFile, imgFile, imgRelativePath);
+
+				File wmvFile;
+				if (isWindowOS)
+					wmvFile = new File(wmvWorkDir.getAbsolutePath() + "\\" + filename);
+				else
+					wmvFile = new File(wmvWorkDir.getAbsolutePath() + "/" + filename);
+
+				wmvRelativePath += "/" + filename;
+				readFileList(xmlFile, imgFile, wmvFile, imgRelativePath, wmvRelativePath);
 
 			} else {
 				if (filename.endsWith(".xml")) {
-					File imgFile;
+					// File imgFile;
+					// if (isWindowOS)
+					// imgFile = new File(imgWorkDir.getAbsolutePath() + "\\" +
+					// filename.split("\\.")[0] + ".jpg");
+					// else
+					// imgFile = new File(imgWorkDir.getAbsolutePath() + "/" +
+					// filename.split("\\.")[0] + ".jpg");
+					// if (!imgFile.exists()) {
+					// // System.out.println(imgFile.toString() + " is not
+					// // existed.");
+					// }
+					// else {
 					if (isWindowOS)
-						imgFile = new File(imgWorkDir.getAbsolutePath() + "\\" + filename.split("\\.")[0] + ".jpg");
+						xmlFileList.add(xmlWorkDir.getAbsolutePath() + "\\" + filename);
 					else
-						imgFile = new File(imgWorkDir.getAbsolutePath() + "/" + filename.split("\\.")[0] + ".jpg");
-					if (!imgFile.exists()) {
-						// System.out.println(imgFile.toString() + " is not
-						// existed.");
-					} else {
-						if (isWindowOS)
-							xmlFileList.add(xmlWorkDir.getAbsolutePath() + "\\" + filename);
-						else
-							xmlFileList.add(xmlWorkDir.getAbsolutePath() + "/" + filename);
-						
-						imgFileList.add(imgRelativePath + "/" + filename.split("\\.")[0] + ".jpg");
-						// imgFileList.add(imgWorkDir.getAbsolutePath() + "\\" +
-						// filename.split("\\.")[0] + ".jpg");
-					}
+						xmlFileList.add(xmlWorkDir.getAbsolutePath() + "/" + filename);
+
+					imgFileList.add(imgRelativePath + "/" + filename.split("\\.")[0] + ".jpg");
+					wmvFileList.add(wmvRelativePath + "/" + filename.split("\\.")[0] + ".wmv");
+					// }
+					// File wmvFile;
+					// if (isWindowOS)
+					// wmvFile = new File(wmvWorkDir.getAbsolutePath() + "\\" +
+					// filename.split("\\.")[0] + ".wmv");
+					// else
+					// wmvFile = new File(wmvWorkDir.getAbsolutePath() + "/" +
+					// filename.split("\\.")[0] + ".wmv");
+					// if (!wmvFile.exists()) {
+					// // System.out.println(imgFile.toString() + " is not
+					// // existed.");
+					// } else {
+
+					
+
+					// }
 				}
 			}
 		}
@@ -127,6 +159,7 @@ public class XMLConverter {
 			}
 			DataModel newModel = extractDataModel(xmlFileList.get(i));
 			newModel.imgPath = imgFileList.get(i);
+			newModel.wmvPath = wmvFileList.get(i);
 			dataModels.add(newModel);
 		}
 		Main.logln("");
@@ -139,7 +172,8 @@ public class XMLConverter {
 			DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 			DocumentBuilder parser = f.newDocumentBuilder();
 
-			Document doc = parser.parse(path);
+			// path = URLEncoder.encode(path,"UTF-8");
+			Document doc = parser.parse(new File(path));
 
 			newModel = new DataModel();
 			Element root = doc.getDocumentElement();
@@ -150,8 +184,7 @@ public class XMLConverter {
 			newModel.crashTime = root.getElementsByTagName("CrashTime").item(0).getTextContent();
 			newModel.configuration = root.getElementsByTagName("Configuration").item(0).getTextContent();
 
-			newModel.numVehicles = Integer.parseInt(root.getElementsByTagName("NumberVehicles").item(0).getAttributes()
-					.getNamedItem("value").getTextContent());
+			newModel.numVehicles = Integer.parseInt(root.getElementsByTagName("NumberVehicles").item(0).getAttributes().getNamedItem("value").getTextContent());
 			newModel.vehicleNo = new String[newModel.numVehicles];
 			newModel.postedSpeedLimit = new String[newModel.numVehicles];
 			newModel.crashTypeCode = new String[newModel.numVehicles];
@@ -171,16 +204,13 @@ public class XMLConverter {
 
 			// System.out.println(newModel.caseID);
 			for (int i = 0; i < newModel.numVehicles; i++) {
-				newModel.vehicleNo[i] = root.getElementsByTagName("GeneralVehicleForm").item(i).getAttributes()
-						.getNamedItem("VehicleNumber").getTextContent();
+				newModel.vehicleNo[i] = root.getElementsByTagName("GeneralVehicleForm").item(i).getAttributes().getNamedItem("VehicleNumber").getTextContent();
 
 				newModel.postedSpeedLimit[i] = root.getElementsByTagName("PostedSpeedLimit").item(i).getTextContent();
 				if (!newModel.postedSpeedLimit[i].equals("Unknown") && !newModel.postedSpeedLimit[i].equals(""))
-					newModel.postedSpeedLimit[i] += " " + root.getElementsByTagName("PostedSpeedLimit").item(i)
-							.getAttributes().getNamedItem("UOM").getTextContent();
+					newModel.postedSpeedLimit[i] += " " + root.getElementsByTagName("PostedSpeedLimit").item(i).getAttributes().getNamedItem("UOM").getTextContent();
 
-				newModel.vehicleCrashType[i] = root.getElementsByTagName("CrashType").item(i + 1).getAttributes()
-						.getNamedItem("ConfigCatStr").getTextContent();
+				newModel.vehicleCrashType[i] = root.getElementsByTagName("CrashType").item(i + 1).getAttributes().getNamedItem("ConfigCatStr").getTextContent();
 
 				if (root.getElementsByTagName("resource").getLength() - 1 < i)
 					newModel.crashTypeCode[i] = " ";
@@ -199,23 +229,18 @@ public class XMLConverter {
 
 				newModel.total[i] = root.getElementsByTagName("Total").item(i).getTextContent();
 				if (!newModel.total[i].equals("Unknown") && !newModel.total[i].equals(""))
-					newModel.total[i] += " " + root.getElementsByTagName("Total").item(i).getAttributes()
-							.getNamedItem("UOM").getTextContent();
+					newModel.total[i] += " " + root.getElementsByTagName("Total").item(i).getAttributes().getNamedItem("UOM").getTextContent();
 				newModel.longItudlnal[i] = root.getElementsByTagName("Longitudinal").item(i).getTextContent();
 				if (!newModel.longItudlnal[i].equals("Unknown") && !newModel.longItudlnal[i].equals(""))
-					newModel.longItudlnal[i] += " " + root.getElementsByTagName("Longitudinal").item(i).getAttributes()
-							.getNamedItem("UOM").getTextContent();
+					newModel.longItudlnal[i] += " " + root.getElementsByTagName("Longitudinal").item(i).getAttributes().getNamedItem("UOM").getTextContent();
 
 				newModel.lateral[i] = root.getElementsByTagName("Lateral").item(i).getTextContent();
 				if (!newModel.lateral[i].equals("Unknown") && !newModel.lateral[i].equals(""))
-					newModel.lateral[i] += " " + root.getElementsByTagName("Lateral").item(i).getAttributes()
-							.getNamedItem("UOM").getTextContent();
+					newModel.lateral[i] += " " + root.getElementsByTagName("Lateral").item(i).getAttributes().getNamedItem("UOM").getTextContent();
 
-				newModel.barrierEquivalent[i] = root.getElementsByTagName("BarrierEquivalentSpeed").item(i)
-						.getTextContent();
+				newModel.barrierEquivalent[i] = root.getElementsByTagName("BarrierEquivalentSpeed").item(i).getTextContent();
 				if (!newModel.barrierEquivalent[i].equals("Unknown") && !newModel.barrierEquivalent[i].equals(""))
-					newModel.barrierEquivalent[i] += " " + root.getElementsByTagName("BarrierEquivalentSpeed").item(i)
-							.getAttributes().getNamedItem("UOM").getTextContent();
+					newModel.barrierEquivalent[i] += " " + root.getElementsByTagName("BarrierEquivalentSpeed").item(i).getAttributes().getNamedItem("UOM").getTextContent();
 			}
 
 		} catch (ParserConfigurationException e) {

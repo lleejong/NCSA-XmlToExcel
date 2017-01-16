@@ -47,6 +47,7 @@ public class ExcelFileCreator {
 		head.createCell(18).setCellValue(new XSSFRichTextString("Light"));
 		head.createCell(19).setCellValue(new XSSFRichTextString("Weather"));
 		head.createCell(20).setCellValue(new XSSFRichTextString("Scene Diagram"));
+		head.createCell(21).setCellValue(new XSSFRichTextString("Video"));
 	}
 
 	private static void processRow(DataModel model) {
@@ -65,6 +66,7 @@ public class ExcelFileCreator {
 			sheet.addMergedRegion(new CellRangeAddress(startRow, endRow, 3, 3));
 			sheet.addMergedRegion(new CellRangeAddress(startRow, endRow, 4, 4));
 			sheet.addMergedRegion(new CellRangeAddress(startRow, endRow, 20, 20));
+			sheet.addMergedRegion(new CellRangeAddress(startRow, endRow, 21, 21));
 		}
 
 		sheet.getRow(startRow).createCell(0).setCellValue(model.caseID);
@@ -76,11 +78,20 @@ public class ExcelFileCreator {
 		imgCell.setCellValue("[Show Image]");
 
 		CreationHelper createHelper = workbook.getCreationHelper();
-		XSSFHyperlink link = (XSSFHyperlink) createHelper.createHyperlink(HyperlinkType.FILE);
+		XSSFHyperlink imgLink = (XSSFHyperlink) createHelper.createHyperlink(HyperlinkType.FILE);
 		model.imgPath = model.imgPath.replace("\\", "/");
-		link.setAddress(model.imgPath);
+		imgLink.setAddress(model.imgPath);
 
-		imgCell.setHyperlink(link);
+		imgCell.setHyperlink(imgLink);
+		
+		XSSFCell videoCell = sheet.getRow(startRow).createCell(21);
+		videoCell.setCellValue("[Show Video]");
+
+		XSSFHyperlink videoLink = (XSSFHyperlink) createHelper.createHyperlink(HyperlinkType.FILE);
+		model.wmvPath = model.wmvPath.replace("\\", "/");
+		videoLink.setAddress(model.wmvPath);
+
+		videoCell.setHyperlink(videoLink);
 
 		for (int i = 0; i < numVehicles; i++) {
 		

@@ -2,6 +2,8 @@ package ui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -87,6 +89,12 @@ public class Main extends JFrame implements ActionListener {
 				else{
 					workdir += "/";
 				}
+//				try {
+//					workdir = URLEncoder.encode(workdir,"UTF-8");
+//				} catch (UnsupportedEncodingException e1) {
+//					e1.printStackTrace();
+//				}
+				System.out.println(workdir);
 				
 				//System.out.println(workdir);
 			}
